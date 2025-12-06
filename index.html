@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra Accurate Countdown Timer</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            background: linear-gradient(135deg, #1e3c72, #2a5298, #4b79a1);
+            background-size: 300% 300%;
+            animation: bgMove 12s infinite alternate;
+        }
+
+        @keyframes bgMove {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            padding: 40px 50px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 350px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 25px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        input {
+            width: 120px;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            outline: none;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            cursor: pointer;
+            background: #ffbe0b;
+            color: #000;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #ffca3a;
+            transform: scale(1.05);
+        }
+
+        #countdown {
+            font-size: 64px;
+            margin-top: 20px;
+            font-weight: bold;
+            text-shadow: 0px 4px 10px rgba(0, 0, 0, 0.4);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Countdown Timer</h1>
+
+        <input type="number" id="secondsInput" placeholder="Enter seconds" min="1">
+        <br>
+        <button id="startBtn">Start</button>
+        <div id="countdown">0</div>
+    </div>
+
+    <script>
+        const startBtn = document.getElementById('startBtn');
+        const countdownDisplay = document.getElementById('countdown');
+        const secondsInput = document.getElementById('secondsInput');
+
+        let timerInterval = null;
+        let endTime = null;
+
+        // Web Audio API beep 
+        function playBeep() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = ctx.createOscillator();
+            oscillator.type = "sine";
+            oscillator.frequency.setValueAtTime(900, ctx.currentTime); // beep
+            oscillator.connect(ctx.destination);
+            oscillator.start();
+            oscillator.stop(ctx.currentTime + 0.2);
+        }
+
+        // Ask notification permission after user click
+        startBtn.addEventListener("click", () => {
+            if (Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+        });
+
+        // Notification sender
+        function showNotification(message) {
+            if (Notification.permission === "granted") {
+                new Notification(message);
+            } else {
+                alert(message);
+            }
+        }
+
+        startBtn.addEventListener('click', () => {
+            let seconds = parseInt(secondsInput.value);
+
+            if (isNaN(seconds) || seconds <= 0) {
+                alert("Enter a positive number of seconds!");
+                return;
+            }
+
+            if (timerInterval) clearInterval(timerInterval);
+
+            endTime = Date.now() + seconds * 1000;
+            startBtn.disabled = true;
+
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 200);
+        });
+
+        function updateTimer() {
+            let remaining = Math.max(0, endTime - Date.now());
+            let secondsLeft = Math.ceil(remaining / 1000);
+
+            countdownDisplay.textContent = secondsLeft;
+
+            if (remaining <= 0) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                startBtn.disabled = false;
+
+                playBeep();
+                showNotification("Timer finished!");
+            }
+        }
+    </script>
+
+</body>
+
+</html>
